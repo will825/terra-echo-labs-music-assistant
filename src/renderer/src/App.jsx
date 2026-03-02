@@ -1,5 +1,5 @@
-import React from 'react'
-import { Routes, Route, NavLink } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, NavLink, useNavigate } from 'react-router-dom'
 import Home from './pages/Home'
 import MIDI from './pages/MIDI'
 import Generator from './pages/Generator'
@@ -16,7 +16,29 @@ const NAV_ITEMS = [
   { to: '/daily',       label: 'Daily' }
 ]
 
+// Page-name → route map for the tel:navigate custom event
+const PAGE_ROUTES = {
+  home:      '/',
+  midi:      '/midi',
+  generator: '/generator',
+  audio:     '/audio',
+  theory:    '/theory',
+  daily:     '/daily',
+}
+
 export default function App() {
+  const navigate = useNavigate()
+
+  // Listen for cross-component navigation events (e.g. Generator → MIDI)
+  useEffect(() => {
+    const handler = (e) => {
+      const route = PAGE_ROUTES[e.detail?.page]
+      if (route) navigate(route)
+    }
+    window.addEventListener('tel:navigate', handler)
+    return () => window.removeEventListener('tel:navigate', handler)
+  }, [navigate])
+
   return (
     <div className="flex h-screen bg-gray-950 text-gray-100 font-mono">
       {/* Sidebar Nav */}

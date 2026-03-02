@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 
 const VOICING_OPTIONS = [
   { value: 'closed', label: 'Closed' },
@@ -61,6 +61,36 @@ export default function MIDI() {
   const [parseError, setParseError]     = useState('')
   const [exportStatus, setExportStatus] = useState('')
   const [loading, setLoading]           = useState(false)
+
+  // Import chords from Generator page (via sessionStorage + tel:navigate event)
+  useEffect(() => {
+    const raw = sessionStorage.getItem('tel_import_chords')
+    if (!raw) return
+    sessionStorage.removeItem('tel_import_chords')
+    try {
+      const imported = JSON.parse(raw)
+      const importedTempo = parseInt(sessionStorage.getItem('tel_import_tempo') || '80')
+      sessionStorage.removeItem('tel_import_tempo')
+      if (Array.isArray(imported) && imported.length) {
+        setProgression([])
+        setParseError('')
+        setExportStatus('')
+        if (!isNaN(importedTempo)) setTempo(importedTempo)
+        // Parse each chord via backend
+        const parseAll = async () => {
+          for (const name of imported) {
+            try {
+              const res = await window.api.request('post', '/midi/parse', {
+                chord: name, octave: 4, voicing: 'closed',
+              })
+              if (res.success) setProgression(prev => [...prev, res.data])
+            } catch { /* skip unrecognised chord */ }
+          }
+        }
+        parseAll()
+      }
+    } catch { /* ignore malformed data */ }
+  }, []) // runs once on mount
 
   const addChord = useCallback(async (name) => {
     const chord = name.trim()

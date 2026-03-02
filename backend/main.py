@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.routers import midi
 
 # Sprint 2
-# from backend.routers import progression, profile
+from backend.routers import progression, profile
 
 # Sprint 3
 # from backend.routers import audio, stems
@@ -48,8 +48,8 @@ app.add_middleware(
 app.include_router(midi.router, prefix="/midi", tags=["MIDI"])
 
 # Sprint 2
-# app.include_router(progression.router, prefix="/progression", tags=["AI Generator"])
-# app.include_router(profile.router, prefix="/profile", tags=["Profile"])
+app.include_router(progression.router, prefix="/progression", tags=["AI Generator"])
+app.include_router(profile.router, prefix="/profile", tags=["Profile"])
 
 # Sprint 3
 # app.include_router(audio.router, prefix="/audio", tags=["Audio"])
