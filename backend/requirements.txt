@@ -1,0 +1,27 @@
+# Terra Echo Labs — Python Backend Dependencies
+# Install: pip3.11 install -r backend/requirements.txt
+
+# API framework
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+
+# MIDI processing (Sprint 1)
+pretty_midi==0.2.10
+mido==1.3.2
+
+# AI / LLM (Sprint 2)
+anthropic==0.21.3
+
+# Database (Sprint 2+)
+sqlalchemy==2.0.27
+
+# Audio processing (Sprint 3)
+yt-dlp==2024.3.10
+
+# Stem splitting — install separately (large, GPU-dependent)
+# pip3.11 install demucs
+# demucs==4.0.1
+
+# Utilities
+python-multipart==0.0.9
+python-dotenv==1.0.1
