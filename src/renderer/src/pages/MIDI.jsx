@@ -66,20 +66,21 @@ export default function MIDI() {
     const chord = name.trim()
     if (!chord) return
     setParseError('')
-
-    const res = await window.api.request('post', '/midi/parse', {
-      chord,
-      octave: parseInt(octave),
-      voicing,
-    })
-
-    if (!res.success) {
-      setParseError(res.error || 'Unknown error')
-      return
+    try {
+      const res = await window.api.request('post', '/midi/parse', {
+        chord,
+        octave: parseInt(octave),
+        voicing,
+      })
+      if (!res.success) {
+        setParseError(res.error || 'Unknown chord name')
+        return
+      }
+      setProgression(prev => [...prev, res.data])
+      setChordInput('')
+    } catch (err) {
+      setParseError('Backend unreachable — is the server running on port 8002?')
     }
-
-    setProgression(prev => [...prev, res.data])
-    setChordInput('')
   }, [octave, voicing])
 
   const handleInputKey = (e) => {
@@ -97,14 +98,19 @@ export default function MIDI() {
   const loadPreset = async (presetChords) => {
     setProgression([])
     setParseError('')
+    setExportStatus('')
     const names = presetChords.split(',').map(s => s.trim()).filter(Boolean)
-    for (const name of names) {
-      const res = await window.api.request('post', '/midi/parse', {
-        chord: name, octave: parseInt(octave), voicing,
-      })
-      if (res.success) {
-        setProgression(prev => [...prev, res.data])
+    try {
+      for (const name of names) {
+        const res = await window.api.request('post', '/midi/parse', {
+          chord: name, octave: parseInt(octave), voicing,
+        })
+        if (res.success) {
+          setProgression(prev => [...prev, res.data])
+        }
       }
+    } catch (err) {
+      setParseError('Backend unreachable — is the server running on port 8002?')
     }
   }
 
@@ -116,22 +122,25 @@ export default function MIDI() {
     setLoading(true)
     setExportStatus('')
 
-    const res = await window.api.request('post', '/midi/progression', {
-      chords: progression.map(p => p.chord),
-      tempo: parseInt(tempo),
-      beats_per_chord: parseInt(beatsPerChord),
-      octave: parseInt(octave),
-      voicing,
-      velocity: parseInt(velocity),
-      instrument_program: 0,
-    })
-
-    setLoading(false)
-
-    if (!res.success) {
-      setExportStatus(`error:${res.error}`)
-    } else {
-      setExportStatus('success:MIDI exported — check output/midi/ in your project folder.')
+    try {
+      const res = await window.api.request('post', '/midi/progression', {
+        chords: progression.map(p => p.chord),
+        tempo: parseInt(tempo),
+        beats_per_chord: parseInt(beatsPerChord),
+        octave: parseInt(octave),
+        voicing,
+        velocity: parseInt(velocity),
+        instrument_program: 0,
+      })
+      setLoading(false)
+      if (!res.success) {
+        setExportStatus(`error:${res.error}`)
+      } else {
+        setExportStatus('success:MIDI exported — check output/midi/ in your project folder.')
+      }
+    } catch (err) {
+      setLoading(false)
+      setExportStatus('error:Backend unreachable — is the server running on port 8002?')
     }
   }
 

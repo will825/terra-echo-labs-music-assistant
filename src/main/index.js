@@ -1,8 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import axios from 'axios'
 
-const BACKEND_URL = 'http://localhost:8000'
+const BACKEND_URL = 'http://127.0.0.1:8002'
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -46,7 +47,6 @@ app.whenReady().then(() => {
 
   // IPC: generic API proxy — renderer calls window.api.request(method, path, data)
   ipcMain.handle('api:request', async (_event, { method, path, data }) => {
-    const { default: axios } = await import('axios')
     try {
       const res = await axios({ method, url: `${BACKEND_URL}${path}`, data })
       return { success: true, data: res.data, error: null }

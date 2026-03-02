@@ -106,9 +106,16 @@ def _resolve_root(root_str: str) -> int:
 def _split_chord_name(chord_name: str) -> tuple[str, str]:
     """
     Split 'Cm7' → ('C', 'min7'), 'F#maj7' → ('F#', 'maj7'), 'Bb' → ('Bb', 'maj').
+    Accepts lowercase input: 'cm7', 'f#maj7', 'bb' all work.
     Returns (root, quality).
     """
     chord_name = chord_name.strip()
+    if not chord_name:
+        raise ValueError("Chord name cannot be empty")
+
+    # Normalize root: first letter uppercase, preserve #/b accidental
+    chord_name = chord_name[0].upper() + chord_name[1:]
+
     # Determine root (1 or 2 chars)
     if len(chord_name) >= 2 and chord_name[1] in ("#", "b"):
         root = chord_name[:2]
@@ -120,8 +127,10 @@ def _split_chord_name(chord_name: str) -> tuple[str, str]:
     if not suffix:
         suffix = "maj"
 
-    # Normalise aliases
-    quality = QUALITY_ALIASES.get(suffix, suffix)
+    # Normalise aliases — try as-is first, then lowercase
+    quality = QUALITY_ALIASES.get(suffix, None)
+    if quality is None:
+        quality = QUALITY_ALIASES.get(suffix.lower(), suffix.lower())
 
     return root, quality
 
