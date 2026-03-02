@@ -11,7 +11,6 @@ from __future__ import annotations
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from backend.midi_engine import (
@@ -108,9 +107,10 @@ def parse_chord_endpoint(req: ParseChordRequest) -> dict:
 
 
 @router.post("/progression")
-def build_progression(req: ProgressionRequest):
+def build_progression(req: ProgressionRequest) -> dict:
     """
-    Convert a chord progression to a MIDI file and return it for download.
+    Convert a chord progression to a MIDI file.
+    Returns JSON with the saved file path (desktop app — file is written locally).
     """
     try:
         midi_path = progression_to_midi(
@@ -122,12 +122,16 @@ def build_progression(req: ProgressionRequest):
             velocity=req.velocity,
             instrument_program=req.instrument_program,
         )
-        return FileResponse(
-            path=midi_path,
-            media_type="audio/midi",
-            filename=midi_path.split("/")[-1],
-            headers={"X-Chord-Count": str(len(req.chords))}
-        )
+        return {
+            "success": True,
+            "data": {
+                "path": midi_path,
+                "filename": midi_path.split("/")[-1],
+                "chords": req.chords,
+                "tempo": req.tempo,
+            },
+            "error": None,
+        }
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 

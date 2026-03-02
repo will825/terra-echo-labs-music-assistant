@@ -136,7 +136,7 @@ export default function MIDI() {
       if (!res.success) {
         setExportStatus(`error:${res.error}`)
       } else {
-        setExportStatus('success:MIDI exported — check output/midi/ in your project folder.')
+        setExportStatus(`success:Saved → ${res.data.filename}  (output/midi/)`)
       }
     } catch (err) {
       setLoading(false)

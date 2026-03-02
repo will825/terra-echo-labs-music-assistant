@@ -46,10 +46,11 @@ app.whenReady().then(() => {
   })
 
   // IPC: generic API proxy — renderer calls window.api.request(method, path, data)
+  // The API already returns { success, data, error } — pass it through directly.
   ipcMain.handle('api:request', async (_event, { method, path, data }) => {
     try {
       const res = await axios({ method, url: `${BACKEND_URL}${path}`, data })
-      return { success: true, data: res.data, error: null }
+      return res.data  // already shaped as { success, data, error }
     } catch (err) {
       const msg = err.response?.data?.detail || err.message
       return { success: false, data: null, error: msg }
