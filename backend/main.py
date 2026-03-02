@@ -36,8 +36,8 @@ def health() -> dict:
 # ---------------------------------------------------------------------------
 
 # Sprint 1
-# from backend.routers import midi
-# app.include_router(midi.router, prefix="/midi", tags=["MIDI"])
+from backend.routers import midi
+app.include_router(midi.router, prefix="/midi", tags=["MIDI"])
 
 # Sprint 2
 # from backend.routers import progression, profile
