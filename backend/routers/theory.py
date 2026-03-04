@@ -12,8 +12,10 @@ Endpoints:
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 
 from backend.theory_reference import (
+    analyze_progression,
     get_all_notes,
     get_chord,
     get_intervals,
@@ -21,6 +23,10 @@ from backend.theory_reference import (
     list_chord_types,
     list_scale_types,
 )
+
+
+class ProgressionRequest(BaseModel):
+    chords: list[str]
 
 router = APIRouter()
 
@@ -77,3 +83,20 @@ def scale(
 def intervals() -> dict:
     """Return the full interval reference table."""
     return {"success": True, "data": get_intervals(), "error": None}
+
+
+@router.post("/analyze-progression")
+def analyze_progression_endpoint(req: ProgressionRequest) -> dict:
+    """
+    Analyze a chord progression and return best-fit scales + per-chord playing tips.
+    Body: { "chords": ["Am", "Em", "Dm", "G"] }
+    """
+    try:
+        data = analyze_progression(req.chords)
+        if data.get("error") and not data.get("best_scales"):
+            raise HTTPException(status_code=400, detail=data["error"])
+        return {"success": True, "data": data, "error": None}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))

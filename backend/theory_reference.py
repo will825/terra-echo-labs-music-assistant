@@ -553,3 +553,278 @@ def get_intervals() -> list[dict[str, Any]]:
 def get_all_notes() -> list[str]:
     """Return the list of all 12 chromatic note names (sharps)."""
     return CHROMATIC.copy()
+
+
+# ---------------------------------------------------------------------------
+# Chord Progression Analyzer — Scale Finder (Sprint 4)
+# ---------------------------------------------------------------------------
+
+_FLAT_TO_SHARP: dict[str, str] = {
+    "Cb": "B", "Db": "C#", "Eb": "D#", "Fb": "E",
+    "Gb": "F#", "Ab": "G#", "Bb": "A#",
+}
+
+# Maps chord-name suffix strings → internal chord type key
+_CHORD_SUFFIX_MAP: dict[str, str] = {
+    "": "maj", "M": "maj", "maj": "maj", "major": "maj",
+    "m": "min", "min": "min", "minor": "min", "-": "min",
+    "dim": "dim", "°": "dim", "o": "dim",
+    "aug": "aug", "+": "aug",
+    "sus2": "sus2", "sus4": "sus4", "sus": "sus4",
+    "5": "5",
+    "maj7": "maj7", "M7": "maj7", "Δ7": "maj7", "Δ": "maj7",
+    "7": "7", "dom7": "7",
+    "m7": "min7", "min7": "min7", "-7": "min7",
+    "mM7": "min_maj7", "minmaj7": "min_maj7",
+    "dim7": "dim7", "°7": "dim7", "o7": "dim7",
+    "m7b5": "half_dim7", "ø7": "half_dim7", "ø": "half_dim7",
+    "aug7": "aug7", "+7": "aug7",
+    "maj9": "maj9", "M9": "maj9",
+    "9": "9",
+    "m9": "min9", "min9": "min9", "-9": "min9",
+    "7#9": "7_sharp9", "7b9": "7_flat9",
+    "m11": "min11", "min11": "min11",
+    "13": "13",
+    "add9": "add9", "add2": "add9",
+    "madd9": "min_add9",
+    "6": "6",
+    "m6": "min6", "min6": "min6",
+}
+
+# Minor-type scales (used to choose i/ii/iii vs I/II/III labels)
+_MINOR_SCALES = {
+    "natural_minor", "dorian", "phrygian", "locrian",
+    "harmonic_minor", "melodic_minor", "minor_pentatonic", "blues",
+}
+
+
+def parse_chord(chord_str: str) -> dict[str, Any] | None:
+    """
+    Parse a chord name into root + chord type.
+    Returns None if the string is unrecognisable.
+    e.g.  'Am'   → {root:'A',  display_root:'A',  chord_type:'min'}
+          'Bbm7' → {root:'A#', display_root:'Bb', chord_type:'min7'}
+          'Cmaj7'→ {root:'C',  display_root:'C',  chord_type:'maj7'}
+    """
+    s = chord_str.strip()
+    if not s:
+        return None
+
+    # Extract root note (1-2 chars)
+    if len(s) >= 2 and s[1] in ("#", "b", "♭"):
+        raw_root = s[:2].replace("♭", "b")
+        suffix = s[2:]
+    else:
+        raw_root = s[0]
+        suffix = s[1:]
+
+    root = _FLAT_TO_SHARP.get(raw_root, raw_root)
+    if root not in CHROMATIC:
+        return None
+
+    chord_type = _CHORD_SUFFIX_MAP.get(suffix)
+    if chord_type is None:
+        # Fallback heuristics
+        lo = suffix.lower()
+        if lo.startswith("m") and not lo.startswith("maj"):
+            chord_type = "min"
+        elif lo.startswith("maj") or lo.startswith("major"):
+            chord_type = "maj"
+        else:
+            chord_type = "maj"
+
+    return {
+        "original": chord_str,
+        "root": root,
+        "display_root": raw_root,
+        "chord_type": chord_type,
+    }
+
+
+def _degree_tip(
+    degree_idx: int,
+    is_minor: bool,
+    chord_type: str,
+    chord_notes: list[str],
+    scale_root: str,
+) -> str:
+    """Return a practical playing tip for a chord at the given scale degree."""
+    minor_degrees = ["i", "ii°", "III", "iv", "v", "VI", "VII"]
+    major_degrees = ["I", "ii", "iii", "IV", "V", "vi", "vii°"]
+    deg = (minor_degrees if is_minor else major_degrees)[min(degree_idx, 6)]
+
+    minor_tips = {
+        0: f"Tonic ({deg}) — home base. Every scale note is safe; rest on {scale_root} for resolution.",
+        1: f"Half-diminished ({deg}) — unstable tension. Use the ♭5 as a quick passing note before resolving.",
+        2: f"Relative major ({deg}) — sudden brightness. Lean on the major 3rd for contrast against the minor key.",
+        3: f"Minor subdominant ({deg}) — dark and heavy. The ♭6 creates emotional, soulful runs here.",
+        4: f"Minor dominant ({deg}) — gentle tension. A stepwise descent back to {scale_root} sounds smooth.",
+        5: f"Submediant ({deg}) — brightest chord in the minor key. Float above it with upper scale tones.",
+        6: f"Subtonic ({deg}) — classic lo-fi/rock cadence. {deg}→i loops naturally with great momentum.",
+    }
+    major_tips = {
+        0: f"Tonic ({deg}) — home. Use freely; end phrases here on {scale_root}.",
+        1: f"Supertonic ({deg}) — subdominant function. Classic ii–V–I setup toward the dominant.",
+        2: f"Mediant ({deg}) — smooth bridge between I and IV. Medium brightness.",
+        3: f"Subdominant ({deg}) — strong lift away from home. The 4th scale degree adds momentum.",
+        4: f"Dominant ({deg}) — strong tension. A ♭7 or raised leading tone pulls firmly back to {scale_root}.",
+        5: f"Relative minor ({deg}) — adds melancholy and depth to a major progression.",
+        6: f"Leading-tone ({deg}) — maximum tension, one semitone below tonic. Resolve up to {scale_root}.",
+    }
+
+    tips = minor_tips if is_minor else major_tips
+    base = tips.get(degree_idx, f"Chord {deg} in {scale_root}.")
+
+    if chord_notes:
+        base += f" Chord tones to emphasise: {', '.join(chord_notes[:3])}."
+
+    return base
+
+
+def analyze_progression(chord_strings: list[str]) -> dict[str, Any]:
+    """
+    Analyse a chord progression and return the top-3 best-fit scales.
+    The best match also includes per-chord playing tips.
+
+    Args:
+        chord_strings: list of chord name strings, e.g. ['Am', 'Em', 'Dm', 'G']
+
+    Returns dict with keys:
+        parsed_chords  — list of {chord, root, chord_type, notes}
+        best_scales    — list of up to 3 scale results (first includes per_chord_tips)
+        error          — error message string or None
+    """
+    # 1. Parse each chord string
+    parsed: list[dict[str, Any]] = []
+    for cs in chord_strings:
+        p = parse_chord(cs)
+        if not p:
+            continue
+        ct = p["chord_type"]
+        if ct in CHORD_TYPES:
+            notes = _build_notes(p["root"], CHORD_TYPES[ct]["intervals"])
+            pitch_classes: set[int] = {_note_idx(n) for n in notes}
+        else:
+            notes = [p["root"]]
+            pitch_classes = {_note_idx(p["root"])}
+        p["notes"] = notes
+        p["pitch_classes"] = pitch_classes
+        parsed.append(p)
+
+    if not parsed:
+        return {"parsed_chords": [], "best_scales": [], "error": "No valid chords found."}
+
+    # 2. Collect all pitch classes from the whole progression
+    all_pcs: set[int] = set()
+    for p in parsed:
+        all_pcs.update(p["pitch_classes"])
+
+    # 3. Score every (root, scale_type) pair
+    scores: list[dict[str, Any]] = []
+    first_root_pc = _note_idx(parsed[0]["root"])
+
+    for root_pc in range(12):
+        root = CHROMATIC[root_pc]
+        for sk, sd in SCALE_TYPES.items():
+            if sk == "chromatic":         # trivially matches everything — skip
+                continue
+
+            scale_pcs = {(root_pc + iv) % 12 for iv in sd["intervals"]}
+
+            covered = len(all_pcs & scale_pcs)
+            if covered == 0:
+                continue
+
+            # Coverage: fraction of the progression's distinct PCs that fit
+            coverage = covered / len(all_pcs)
+            # Efficiency: fraction of scale notes actually used (penalises huge scales)
+            efficiency = covered / len(scale_pcs)
+            score = coverage * 0.75 + efficiency * 0.25
+
+            # Bonus: first chord's root is the scale root (likely tonic)
+            if root_pc == first_root_pc:
+                score += 0.06
+            # Bonus: first chord root is diatonic to scale
+            elif first_root_pc in scale_pcs:
+                score += 0.02
+            # Slight penalty for ambiguous scales
+            if sk == "whole_tone":
+                score *= 0.82
+            if sk == "diminished_hw":
+                score *= 0.88
+
+            prefer_flats = root in _FLAT_KEYS or root.endswith("b")
+            scale_notes = _build_notes(root, sd["intervals"], prefer_flats=prefer_flats)
+
+            scores.append({
+                "root": root,
+                "scale_type": sk,
+                "label": sd["label"],
+                "full_label": f"{root} {sd['label']}",
+                "fit_score": round(score, 4),
+                "coverage": round(coverage, 4),
+                "notes": scale_notes,
+                "description": sd["description"],
+                "vibe": sd["vibe"],
+                "genre_uses": sd["genre_uses"],
+                "daw_tip": sd["daw_tip"],
+            })
+
+    if not scores:
+        return {"parsed_chords": [], "best_scales": [], "error": "Could not find a matching scale."}
+
+    scores.sort(key=lambda x: -x["fit_score"])
+
+    # Keep top 3 distinct results (allow same scale_type with different roots)
+    top = scores[:3]
+
+    # 4. Generate per-chord tips for the best match
+    best = top[0]
+    best_root_pc = _note_idx(best["root"])
+    scale_ivs = SCALE_TYPES[best["scale_type"]]["intervals"]
+    scale_pcs_best = {(best_root_pc + iv) % 12 for iv in scale_ivs}
+    is_minor = best["scale_type"] in _MINOR_SCALES
+
+    per_chord_tips: list[dict[str, Any]] = []
+    for p in parsed:
+        chord_root_pc = _note_idx(p["root"])
+        offset = (chord_root_pc - best_root_pc) % 12
+        degree_idx: int | None = None
+        for i, iv in enumerate(scale_ivs):
+            if iv % 12 == offset:
+                degree_idx = i
+                break
+
+        in_scale = all(pc in scale_pcs_best for pc in p["pitch_classes"])
+
+        if degree_idx is not None:
+            tip = _degree_tip(degree_idx, is_minor, p["chord_type"],
+                              p["notes"], best["root"])
+        else:
+            tip = (
+                f"Chromatic chord (outside {best['full_label']}). "
+                "Use as a colour chord — approach from a semitone above or below, "
+                "then return to a scale chord for resolution."
+            )
+
+        per_chord_tips.append({
+            "chord": p["original"],
+            "root": p["root"],
+            "chord_type": p["chord_type"],
+            "notes": p["notes"],
+            "in_scale": in_scale,
+            "degree_idx": degree_idx,
+            "tip": tip,
+        })
+
+    top[0]["per_chord_tips"] = per_chord_tips
+
+    return {
+        "parsed_chords": [
+            {"chord": p["original"], "root": p["root"],
+             "chord_type": p["chord_type"], "notes": p["notes"]}
+            for p in parsed
+        ],
+        "best_scales": top,
+        "error": None,
+    }
