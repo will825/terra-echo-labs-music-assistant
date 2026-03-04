@@ -21,7 +21,7 @@ from backend.routers import progression, profile
 from backend.routers import audio, stems
 
 # Sprint 4
-# from backend.routers import daily, theory
+from backend.routers import daily, theory
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -56,8 +56,8 @@ app.include_router(audio.router, prefix="/audio", tags=["Audio"])
 app.include_router(stems.router, prefix="/stems", tags=["Stems"])
 
 # Sprint 4
-# app.include_router(daily.router, prefix="/daily", tags=["Daily"])
-# app.include_router(theory.router, prefix="/theory", tags=["Theory"])
+app.include_router(daily.router, prefix="/daily", tags=["Daily"])
+app.include_router(theory.router, prefix="/theory", tags=["Theory"])
 
 # ---------------------------------------------------------------------------
 # Health
