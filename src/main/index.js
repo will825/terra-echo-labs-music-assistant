@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import axios from 'axios'
@@ -43,6 +43,19 @@ app.whenReady().then(() => {
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
+  })
+
+  // IPC: native file open dialog
+  ipcMain.handle('dialog:openFile', async (_event, { filters } = {}) => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: filters || [
+        { name: 'Audio Files', extensions: ['wav', 'mp3', 'flac', 'aiff', 'ogg', 'm4a'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    })
+    if (result.canceled || !result.filePaths.length) return null
+    return result.filePaths[0]
   })
 
   // IPC: generic API proxy — renderer calls window.api.request(method, path, data)

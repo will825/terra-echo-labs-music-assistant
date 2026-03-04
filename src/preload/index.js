@@ -10,5 +10,12 @@ contextBridge.exposeInMainWorld('api', {
    * @returns {Promise<{success: boolean, data: any, error: string|null}>}
    */
   request: (method, path, data = null) =>
-    ipcRenderer.invoke('api:request', { method, path, data })
+    ipcRenderer.invoke('api:request', { method, path, data }),
+
+  /**
+   * Open a native file picker dialog.
+   * @returns {Promise<string|null>} Absolute file path, or null if cancelled.
+   */
+  openFile: (filters) =>
+    ipcRenderer.invoke('dialog:openFile', { filters }),
 })

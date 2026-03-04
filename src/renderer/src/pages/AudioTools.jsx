@@ -3,8 +3,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SAMPLE_RATES = [
-  { value: 96000, label: '96 kHz (High-res)' },
   { value: 48000, label: '48 kHz (Standard)' },
+  { value: 96000, label: '96 kHz (High-res)' },
   { value: 44100, label: '44.1 kHz (CD)' },
 ]
 
@@ -139,7 +139,7 @@ function JobCard({ job, onUseStem }) {
 
 function YouTubeTab({ onJobComplete }) {
   const [url, setUrl]               = useState('')
-  const [sampleRate, setSampleRate] = useState(96000)
+  const [sampleRate, setSampleRate] = useState(48000)
   const [bitDepth, setBitDepth]     = useState(24)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError]           = useState('')
@@ -275,6 +275,7 @@ function StemTab({ importPath, clearImport }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError]           = useState('')
   const [jobs, setJobs]             = useState([])
+  const [dragging, setDragging]     = useState(false)
   const pollerRef                   = useRef(null)
 
   useEffect(() => {
@@ -297,9 +298,25 @@ function StemTab({ importPath, clearImport }) {
     return () => clearInterval(pollerRef.current)
   }, [pollJobs])
 
+  // Native file browser
+  const handleBrowse = async () => {
+    const path = await window.api.openFile()
+    if (path) setAudioPath(path)
+  }
+
+  // Drag and drop
+  const handleDragOver = (e) => { e.preventDefault(); setDragging(true) }
+  const handleDragLeave = () => setDragging(false)
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (file?.path) setAudioPath(file.path)
+  }
+
   const handleSubmit = async () => {
     const trimmed = audioPath.trim()
-    if (!trimmed) { setError('Enter a file path first'); return }
+    if (!trimmed) { setError('Choose an audio file first'); return }
     setError('')
     setSubmitting(true)
     try {
@@ -321,39 +338,75 @@ function StemTab({ importPath, clearImport }) {
   return (
     <div className="space-y-5">
       <div className="bg-gray-900/60 border border-gray-700 rounded-2xl p-5 space-y-4">
-        <div className="space-y-2">
-          <label className="text-xs text-gray-400 uppercase tracking-wider">Audio File Path</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={audioPath}
-              onChange={e => setAudioPath(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-              placeholder="/Users/will/.../output/audio/track.wav"
-              className="flex-1 bg-gray-800 border border-gray-600 text-gray-200 rounded-xl
-                         px-4 py-2.5 text-sm focus:outline-none focus:border-teal-500
-                         placeholder-gray-600 font-mono"
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="bg-indigo-700 hover:bg-indigo-600 disabled:bg-indigo-900
-                         disabled:cursor-not-allowed text-white font-semibold px-5 py-2.5
-                         rounded-xl transition-colors text-sm flex items-center gap-2 flex-shrink-0"
-            >
-              {submitting
-                ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                : '✂️'
-              }
-              {submitting ? 'Starting…' : 'Split Stems'}
-            </button>
-          </div>
-          {error && <p className="text-red-400 text-xs">{error}</p>}
-          <p className="text-gray-600 text-xs">
-            Tip: Click "Use for Stems →" in the YouTube tab to auto-fill this path.
-          </p>
+
+        {/* Drag & drop zone */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`border-2 border-dashed rounded-xl px-6 py-8 text-center transition-colors cursor-default ${
+            dragging
+              ? 'border-indigo-500 bg-indigo-900/20'
+              : audioPath
+              ? 'border-teal-700 bg-teal-900/10'
+              : 'border-gray-700 hover:border-gray-600'
+          }`}
+        >
+          {audioPath ? (
+            <div className="space-y-1">
+              <p className="text-2xl">🎵</p>
+              <p className="text-teal-300 text-sm font-mono truncate max-w-full">
+                {audioPath.split('/').pop()}
+              </p>
+              <p className="text-gray-500 text-xs truncate">{audioPath}</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <p className="text-3xl">{dragging ? '📂' : '✂️'}</p>
+              <p className="text-gray-300 text-sm font-medium">
+                {dragging ? 'Drop to load' : 'Drag & drop your audio file here'}
+              </p>
+              <p className="text-gray-600 text-xs">WAV · MP3 · FLAC · AIFF · M4A</p>
+            </div>
+          )}
         </div>
 
+        {/* Browse + Split row */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleBrowse}
+            className="bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium px-4 py-2.5
+                       rounded-xl transition-colors text-sm flex items-center gap-2"
+          >
+            📁 Browse Files
+          </button>
+          {audioPath && (
+            <button
+              onClick={() => setAudioPath('')}
+              className="text-gray-500 hover:text-gray-300 px-3 py-2.5 rounded-xl
+                         border border-gray-700 hover:border-gray-600 transition-colors text-xs"
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !audioPath}
+            className="ml-auto bg-indigo-700 hover:bg-indigo-600 disabled:bg-indigo-900
+                       disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5
+                       rounded-xl transition-colors text-sm flex items-center gap-2"
+          >
+            {submitting
+              ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              : '✂️'
+            }
+            {submitting ? 'Starting…' : 'Split Stems'}
+          </button>
+        </div>
+
+        {error && <p className="text-red-400 text-xs">{error}</p>}
+
+        {/* Model selector */}
         <div className="space-y-2">
           <label className="text-xs text-gray-400 uppercase tracking-wider">Demucs Model</label>
           <div className="grid grid-cols-3 gap-2">
@@ -395,12 +448,9 @@ function StemTab({ importPath, clearImport }) {
         </div>
       )}
 
-      {jobs.length === 0 && (
-        <div className="flex flex-col items-center justify-center h-40 border-2 border-dashed
-                        border-gray-700 rounded-2xl text-center p-6">
-          <div className="text-3xl mb-2">✂️</div>
-          <p className="text-gray-400 text-sm">Enter a WAV file path and hit Split Stems</p>
-          <p className="text-gray-600 text-xs mt-1">Demucs v4 htdemucs · Metal GPU acceleration</p>
+      {jobs.length === 0 && !audioPath && (
+        <div className="text-center text-gray-600 text-xs py-2">
+          Demucs v4 htdemucs · Metal GPU acceleration · Stems saved to output/stems/
         </div>
       )}
     </div>

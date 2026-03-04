@@ -80,28 +80,28 @@ def _run_extraction(job_id: str, url: str, sample_rate: int, bit_depth: int) -> 
         elif d.get("status") == "finished":
             _update_job(job_id, status="converting", progress=70)
 
+    sample_fmt = "s32" if bit_depth >= 24 else "s16"
+
     ydl_opts: dict[str, Any] = {
         "format": "bestaudio/best",
         "outtmpl": str(OUTPUT_DIR / "%(title)s.%(ext)s"),
         "progress_hooks": [ydl_progress_hook],
         "quiet": True,
         "no_warnings": True,
+        # Only FFmpegExtractAudio — FFmpegAudioConvertor does not exist in yt-dlp
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
                 "preferredcodec": "wav",
             },
-            {
-                "key": "FFmpegAudioConvertor",
-                "preferedcodec": "wav",
-            },
         ],
-        # ffmpeg post-processor args for 24-bit / target sample rate
-        "postprocessor_args": [
-            "-ar", str(sample_rate),
-            "-sample_fmt", "s32",   # 32-bit container holds 24-bit data
-            "-bits_per_raw_sample", "24",
-        ],
+        # Target sample rate + bit depth via ffmpeg args on the extract step
+        "postprocessor_args": {
+            "ffmpegextractaudio": [
+                "-ar", str(sample_rate),
+                "-sample_fmt", sample_fmt,
+            ],
+        },
         "prefer_ffmpeg": True,
     }
 
