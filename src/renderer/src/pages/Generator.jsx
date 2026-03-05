@@ -469,7 +469,7 @@ export default function Generator() {
       <div className="flex items-center justify-between flex-shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-teal-400">AI Progression Generator</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Powered by Claude claude-3-5-haiku-20241022</p>
+          <p className="text-gray-500 text-sm mt-0.5">Powered by Groq · Llama 3.3 70B</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -697,7 +697,7 @@ export default function Generator() {
                 <div className="text-4xl mb-3">✨</div>
                 <p className="text-gray-400 font-medium">Configure your settings and hit Generate</p>
                 <p className="text-gray-600 text-sm mt-1">
-                  Claude will craft a {numChords}-chord {genre.toLowerCase()} progression in {key} {scale}
+                  Groq will craft a {numChords}-chord {genre.toLowerCase()} progression in {key} {scale}
                 </p>
               </div>
             )
@@ -707,7 +707,7 @@ export default function Generator() {
             <div className="flex flex-col items-center justify-center h-64 rounded-2xl
                             border border-gray-700 text-center p-8 animate-pulse">
               <div className="text-3xl mb-3">🎵</div>
-              <p className="text-teal-400 font-medium">Claude is composing…</p>
+              <p className="text-teal-400 font-medium">Groq is composing…</p>
               <p className="text-gray-600 text-sm mt-1">
                 Generating a {numChords}-chord {genre.toLowerCase()} progression
               </p>

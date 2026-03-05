@@ -37,6 +37,14 @@ yarn-error.log*
 *.swo
 *~
 
+# Claude Code local settings (launch.json is committed, local settings are not)
+.claude/settings.local.json
+.claude/memory/
+
+# PM / binary docs (keep in local drive only)
+*.pdf
+*.docx
+
 # Environment / Secrets
 .env
 .env.local
@@ -60,6 +68,8 @@ downloads/
 # Electron build artifacts
 app/dist/
 app/build/
+release/
 *.dmg
 *.pkg
 *.zip
+*.blockmap

@@ -1,6 +1,6 @@
 {
   "name": "terra-echo-labs-music-assistant",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Terra Echo Labs — Music Production Intelligence Suite",
   "main": "out/main/index.js",
   "author": "Will | Terra Echo Studios",
@@ -11,7 +11,7 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "package": "electron-vite build && electron-builder",
-    "backend": "python3.11 -m uvicorn backend.main:app --reload --port 8000",
+    "backend": "python3.11 -m uvicorn backend.main:app --reload --port 8002",
     "start": "concurrently \"npm run backend\" \"npm run dev\""
   },
   "dependencies": {
@@ -35,14 +35,28 @@
   "build": {
     "appId": "com.terraechostudios.musicassistant",
     "productName": "Terra Echo Labs",
+    "copyright": "Copyright © 2026 Terra Echo Studios",
     "mac": {
       "target": "dmg",
-      "arch": [
-        "x64"
-      ]
+      "arch": ["x64"],
+      "icon": "src/renderer/public/logo.png",
+      "category": "public.app-category.music"
     },
+    "dmg": {
+      "title": "Terra Echo Labs ${version}",
+      "background": null,
+      "window": { "width": 540, "height": 380 }
+    },
+    "files": [
+      "out/**/*",
+      "backend/**/*",
+      "database/**/*",
+      "!backend/**/__pycache__",
+      "!**/*.pyc"
+    ],
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "resources"
     }
   }
 }

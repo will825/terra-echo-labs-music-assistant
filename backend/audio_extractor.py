@@ -1,6 +1,6 @@
 """
 Terra Echo Labs — YouTube → WAV Extractor (Sprint 3)
-Downloads audio from a YouTube URL and converts to 24-bit / 96 kHz WAV
+Downloads audio from a YouTube URL and converts to 24-bit / 48 kHz WAV
 using yt-dlp + ffmpeg.  Long-running jobs are tracked in a thread-safe
 in-memory store so the API can return immediately and be polled for status.
 """
@@ -83,11 +83,14 @@ def _run_extraction(job_id: str, url: str, sample_rate: int, bit_depth: int) -> 
     sample_fmt = "s32" if bit_depth >= 24 else "s16"
 
     ydl_opts: dict[str, Any] = {
-        "format": "bestaudio/best",
+        # Prefer native audio-only streams (m4a/opus/webm) to avoid downloading
+        # a video+audio muxed file which is much larger and slower.
+        "format": "bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio[ext=opus]/bestaudio/best[vcodec=none]/best",
         "outtmpl": str(OUTPUT_DIR / "%(title)s.%(ext)s"),
         "progress_hooks": [ydl_progress_hook],
         "quiet": True,
         "no_warnings": True,
+        "noplaylist": True,   # only download the single video, ignore playlist params
         # Only FFmpegExtractAudio — FFmpegAudioConvertor does not exist in yt-dlp
         "postprocessors": [
             {
@@ -141,7 +144,7 @@ def _run_extraction(job_id: str, url: str, sample_rate: int, bit_depth: int) -> 
 
 def extract_audio(
     url: str,
-    sample_rate: int = 96000,
+    sample_rate: int = 48000,
     bit_depth: int = 24,
 ) -> str:
     """

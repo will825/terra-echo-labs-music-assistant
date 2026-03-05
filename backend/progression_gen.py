@@ -1,6 +1,6 @@
 """
 Terra Echo Labs — AI Progression Generator (Sprint 2)
-Generates chord progressions via the Anthropic Claude API (claude-3-5-haiku).
+Generates chord progressions via Groq (free tier, Llama 3.3 70B).
 Uses an in-memory LRU cache to avoid repeat API calls for identical inputs.
 """
 
@@ -9,11 +9,10 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from anthropic import Anthropic, APIError
+from groq import Groq
 from dotenv import load_dotenv
 
 # Load .env from the project root (two levels up from this file)
@@ -189,18 +188,18 @@ def generate_progression(
     bypass_cache: bool = False,
 ) -> dict[str, Any]:
     """
-    Generate a chord progression using Claude claude-3-5-haiku-20241022.
+    Generate a chord progression using Groq (free tier, Llama 3.3 70B).
 
     Returns a dict with keys: chords, key, scale, tempo, explanation,
     theory_note, daw_tip, cached (bool).
 
-    Raises ValueError if ANTHROPIC_API_KEY is not set.
+    Raises ValueError if GROQ_API_KEY is not set.
     Raises RuntimeError on API or parse errors.
     """
-    api_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
-    if not api_key or api_key == "sk-ant-your-key-here":
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if not api_key or api_key == "your-groq-key-here":
         raise ValueError(
-            "ANTHROPIC_API_KEY is not set. Add it to your .env file in the project root."
+            "GROQ_API_KEY is not set. Add it to your .env file in the project root."
         )
 
     # Validate num_chords
@@ -215,18 +214,19 @@ def generate_progression(
 
     prompt = _build_prompt(genre, mood, key, scale, num_chords, complexity, tempo, extra_instructions)
 
-    client = Anthropic(api_key=api_key)
+    client = Groq(api_key=api_key)
 
     try:
-        message = client.messages.create(
-            model="claude-3-5-haiku-20241022",
-            max_tokens=512,
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
+            max_tokens=512,
+            temperature=0.7,
         )
-    except APIError as exc:
-        raise RuntimeError(f"Anthropic API error: {exc}") from exc
+    except Exception as exc:
+        raise RuntimeError(f"Groq API error: {exc}") from exc
 
-    raw = message.content[0].text.strip()
+    raw = response.choices[0].message.content.strip()
 
     # Strip accidental markdown code fences if model slips up
     if raw.startswith("```"):

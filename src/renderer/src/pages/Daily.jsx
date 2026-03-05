@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 
-const api = (path, opts = {}) =>
-  window.api.request(path, opts).then((r) => {
+const api = (path, method = 'get') =>
+  window.api.request(method, path).then((r) => {
     if (!r.success) throw new Error(r.error || 'API error')
     return r.data
   })
@@ -160,7 +160,7 @@ export default function Daily() {
   const handleComplete = async () => {
     if (!content?.challenge?.id) return
     try {
-      await api(`/daily/challenge/${content.challenge.id}/complete`, { method: 'POST' })
+      await api(`/daily/challenge/${content.challenge.id}/complete`, 'post')
       setContent((prev) => ({
         ...prev,
         challenge: { ...prev.challenge, completed: true },

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Terra Echo Labs",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--renderer-only"],
+      "port": 5173
+    }
+  ]
+}
