@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import mascotSrc from '../assets/mascot.png'
+import logoSrc from '../assets/logo.png'
 
 /* ── Module card config ──────────────────────────────────────────────────── */
 const MODULES = [
@@ -189,20 +191,11 @@ export default function Home() {
           {/* Mascot */}
           <div className="flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden bg-gray-800/60 border border-gray-700/40 flex items-center justify-center">
             <img
-              src="/mascot.png"
+              src={mascotSrc}
               alt="TEL Mascot"
               className="w-full h-full object-contain"
               onError={(e) => {
-                e.target.style.display = 'none'
-                // Fallback: show logo instead
-                const fallback = document.createElement('img')
-                fallback.src = '/logo.png'
-                fallback.className = 'w-full h-full object-contain p-2'
-                fallback.onError = () => {
-                  e.target.parentElement.innerHTML =
-                    '<span class="text-5xl select-none">🎶</span>'
-                }
-                e.target.parentElement.appendChild(fallback)
+                e.target.src = logoSrc
               }}
             />
           </div>

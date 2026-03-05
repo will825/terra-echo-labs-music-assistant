@@ -6,6 +6,8 @@ import Generator from './pages/Generator'
 import AudioTools from './pages/AudioTools'
 import Theory from './pages/Theory'
 import Daily from './pages/Daily'
+import logoSrc from './assets/logo.png'
+import hummingbirdSrc from './assets/hummingbird.png'
 
 /* ── SVG Icons ────────────────────────────────────────────────────────────── */
 const IconHome = () => (
@@ -82,14 +84,9 @@ export default function App() {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-800 flex-shrink-0 flex items-center justify-center">
               <img
-                src="/logo.png"
+                src={logoSrc}
                 alt="TEL Logo"
                 className="w-full h-full object-contain"
-                onError={(e) => {
-                  e.target.style.display = 'none'
-                  e.target.parentElement.innerHTML =
-                    '<span class="text-teal-400 text-xl font-bold">T</span>'
-                }}
               />
             </div>
             <div className="min-w-0">
@@ -140,10 +137,9 @@ export default function App() {
           {/* Hummingbird accent image */}
           <div className="w-full h-20 flex items-center justify-center opacity-40 hover:opacity-70 transition-opacity">
             <img
-              src="/hummingbird.png"
+              src={hummingbirdSrc}
               alt=""
               className="max-h-full max-w-full object-contain"
-              onError={(e) => { e.target.style.display = 'none' }}
             />
           </div>
           {/* Version */}
