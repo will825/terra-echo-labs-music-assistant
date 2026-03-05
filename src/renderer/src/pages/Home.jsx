@@ -191,12 +191,9 @@ export default function Home() {
           {/* Mascot */}
           <div className="flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden bg-gray-800/60 border border-gray-700/40 flex items-center justify-center">
             <img
-              src={mascotSrc}
-              alt="TEL Mascot"
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                e.target.src = logoSrc
-              }}
+              src={logoSrc}
+              alt="TEL Logo"
+              className="w-full h-full object-contain p-1"
             />
           </div>
 

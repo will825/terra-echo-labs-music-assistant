@@ -135,7 +135,7 @@ export default function App() {
         {/* Bottom Accent / Mascot */}
         <div className="px-3 pb-3 flex flex-col items-center gap-2">
           {/* Hummingbird accent image */}
-          <div className="w-full h-20 flex items-center justify-center opacity-40 hover:opacity-70 transition-opacity">
+          <div className="w-full h-32 flex items-center justify-center opacity-50 hover:opacity-80 transition-opacity">
             <img
               src={hummingbirdSrc}
               alt=""
