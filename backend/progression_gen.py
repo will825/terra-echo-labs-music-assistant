@@ -12,12 +12,20 @@ import os
 from pathlib import Path
 from typing import Any
 
+import sys
+
 from groq import Groq
 from dotenv import load_dotenv
 
-# Load .env from the project root (two levels up from this file)
-_ROOT = Path(__file__).parent.parent
-load_dotenv(_ROOT / ".env")
+# Load .env — packaged app reads from app support dir, dev reads from project root
+if getattr(sys, "frozen", False):
+    _ENV_PATH = (
+        Path(os.environ.get("TEL_DATA_DIR", Path.home() / "Library" / "Application Support" / "Terra Echo Labs"))
+        / ".env"
+    )
+else:
+    _ENV_PATH = Path(__file__).parent.parent / ".env"
+load_dotenv(_ENV_PATH)
 
 # ---------------------------------------------------------------------------
 # Genre presets — used in prompt construction and as UI suggestion values.

@@ -10,9 +10,11 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "package": "electron-vite build && electron-builder",
     "backend": "python3.11 -m uvicorn backend.main:app --reload --port 8002",
-    "start": "concurrently \"npm run backend\" \"npm run dev\""
+    "start": "concurrently \"npm run backend\" \"npm run dev\"",
+    "build:backend": "bash scripts/build-backend.sh",
+    "package": "electron-vite build && electron-builder",
+    "package:full": "bash scripts/build-backend.sh && electron-vite build && electron-builder"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
@@ -47,11 +49,14 @@
       "window": { "width": 540, "height": 380 }
     },
     "files": [
-      "out/**/*",
-      "backend/**/*",
-      "database/**/*",
-      "!backend/**/__pycache__",
-      "!**/*.pyc"
+      "out/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/tel-backend",
+        "to": "tel-backend",
+        "filter": ["**/*"]
+      }
     ],
     "directories": {
       "output": "release",

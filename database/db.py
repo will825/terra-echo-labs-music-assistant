@@ -5,11 +5,34 @@ Run directly to create/reset the database: python3.11 database/db.py
 
 import os
 import sqlite3
+import sys
 from pathlib import Path
 
-# Database lives in the project root, excluded from git by .gitignore
-DB_PATH = Path(__file__).parent.parent / "tel_music.db"
-SCHEMA_PATH = Path(__file__).parent / "schema.sql"
+
+def _resolve_paths() -> tuple[Path, Path]:
+    """
+    Return (db_path, schema_path) for the current runtime context.
+
+    - Packaged (PyInstaller): db lives in ~/Library/Application Support/Terra Echo Labs/
+      so it survives app updates. Schema is read from the frozen bundle (read-only).
+    - Development: db lives in the project root; schema is a sibling file.
+    """
+    if getattr(sys, "frozen", False):
+        data_dir = Path(
+            os.environ.get(
+                "TEL_DATA_DIR",
+                Path.home() / "Library" / "Application Support" / "Terra Echo Labs",
+            )
+        )
+        data_dir.mkdir(parents=True, exist_ok=True)
+        schema = Path(sys._MEIPASS) / "database" / "schema.sql"  # type: ignore[attr-defined]
+        return data_dir / "tel_music.db", schema
+    # Dev mode — project root
+    root = Path(__file__).parent.parent
+    return root / "tel_music.db", Path(__file__).parent / "schema.sql"
+
+
+DB_PATH, SCHEMA_PATH = _resolve_paths()
 
 
 def get_connection() -> sqlite3.Connection:
