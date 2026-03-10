@@ -158,7 +158,7 @@ function DailySnippet() {
         </div>
         <div className="bg-gray-800/50 rounded-lg p-3 col-span-2">
           <div className="text-xs text-gray-500 mb-1">Tip</div>
-          <div className="text-xs text-gray-300 leading-relaxed line-clamp-3">{daily.tip?.text}</div>
+          <div className="text-xs text-gray-300 leading-relaxed line-clamp-3">{daily.tip?.content}</div>
         </div>
       </div>
     </div>
