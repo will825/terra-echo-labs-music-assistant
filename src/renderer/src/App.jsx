@@ -5,6 +5,7 @@ import MIDI from './pages/MIDI'
 import Generator from './pages/Generator'
 import AudioTools from './pages/AudioTools'
 import Theory from './pages/Theory'
+import ScaleFinder from './pages/ScaleFinder'
 import Daily from './pages/Daily'
 import logoSrc from './assets/logo.png'
 import hummingbirdSrc from './assets/hummingbird.png'
@@ -35,6 +36,11 @@ const IconTheory = () => (
     <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
   </svg>
 )
+const IconScaleFinder = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+  </svg>
+)
 const IconDaily = () => (
   <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
     <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
@@ -43,21 +49,23 @@ const IconDaily = () => (
 
 /* ── Nav Config ───────────────────────────────────────────────────────────── */
 const NAV_ITEMS = [
-  { to: '/',            label: 'Home',          Icon: IconHome  },
-  { to: '/midi',        label: 'MIDI Engine',   Icon: IconMidi  },
-  { to: '/generator',   label: 'AI Generator',  Icon: IconAI    },
-  { to: '/audio',       label: 'Audio Tools',   Icon: IconAudio },
-  { to: '/theory',      label: 'Theory',        Icon: IconTheory},
-  { to: '/daily',       label: 'Daily',         Icon: IconDaily },
+  { to: '/',             label: 'Home',          Icon: IconHome        },
+  { to: '/midi',         label: 'MIDI Engine',   Icon: IconMidi        },
+  { to: '/generator',    label: 'AI Generator',  Icon: IconAI          },
+  { to: '/audio',        label: 'Audio Tools',   Icon: IconAudio       },
+  { to: '/theory',       label: 'Theory',        Icon: IconTheory      },
+  { to: '/scale-finder', label: 'Scale Finder',  Icon: IconScaleFinder },
+  { to: '/daily',        label: 'Daily',         Icon: IconDaily       },
 ]
 
 const PAGE_ROUTES = {
-  home:      '/',
-  midi:      '/midi',
-  generator: '/generator',
-  audio:     '/audio',
-  theory:    '/theory',
-  daily:     '/daily',
+  home:        '/',
+  midi:        '/midi',
+  generator:   '/generator',
+  audio:       '/audio',
+  theory:      '/theory',
+  scalefinder: '/scale-finder',
+  daily:       '/daily',
 }
 
 /* ── App Shell ────────────────────────────────────────────────────────────── */
@@ -158,8 +166,9 @@ export default function App() {
           <Route path="/midi"      element={<MIDI />} />
           <Route path="/generator" element={<Generator />} />
           <Route path="/audio"     element={<AudioTools />} />
-          <Route path="/theory"    element={<Theory />} />
-          <Route path="/daily"     element={<Daily />} />
+          <Route path="/theory"        element={<Theory />} />
+          <Route path="/scale-finder" element={<ScaleFinder />} />
+          <Route path="/daily"        element={<Daily />} />
         </Routes>
       </main>
     </div>
